@@ -50,7 +50,7 @@ def process_latest_activities():
     formatted_df = df[cols_to_keep].rename(columns=column_mapping)
 
     # Opslaan als een vast bestand voor de GitHub Action artifact
-    output_path = "data/formatted_activities.csv"
+    output_path = "data/activities_formatted.csv"
     formatted_df.to_csv(output_path, index=False)
     print(f"Succesvol opgeslagen in: {output_path}")
 
