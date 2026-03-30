@@ -1,4 +1,4 @@
-name: Fetch Intervals Data
+name: Fetch and Format Intervals Data
 
 on:
   workflow_dispatch:
@@ -8,12 +8,12 @@ on:
         required: true
         default: '2025-07-01'
       end_date:
-        description: 'End date (YYYY-MM-DD)'
-        required: true
-        default: '2025-07-07'
+        description: 'End date (YYYY-MM-DD) - Leeg laten voor vandaag'
+        required: false
+        default: ''
 
 jobs:
-  fetch:
+  fetch_and_process:
     runs-on: ubuntu-latest
 
     env:
@@ -34,16 +34,22 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pandas
 
       - name: Run fetch_intervals.py
         run: |
-          python fetch_intervals.py \
-            --start "${{ inputs.start_date }}" \
-            --end "${{ inputs.end_date }}" \
-            --out-dir data
+          # We vangen de input op; als deze leeg is, geven we de vlag niet mee aan het script
+          if [ -z "${{ inputs.end_date }}" ]; then
+            python fetch_intervals.py --start "${{ inputs.start_date }}" --out-dir data
+          else
+            python fetch_intervals.py --start "${{ inputs.start_date }}" --end "${{ inputs.end_date }}" --out-dir data
+          fi
 
-      - name: Upload CSV artifacts
+      - name: Process and Format Data
+        run: python process_data.py
+
+      - name: Upload Only Formatted Activities
         uses: actions/upload-artifact@v4
         with:
-          name: intervals-data-${{ inputs.start_date }}-to-${{ inputs.end_date }}
-          path: data/
+          name: activities-export-${{ inputs.start_date }}
+          path: data/activities_formatted.csv
